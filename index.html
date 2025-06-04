@@ -48,59 +48,69 @@
     <div id="result"></div>
   </div>
 
-  <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbzb0B7SaRSAJiKzUoU6hI7RMB4LzO6Uoua1fn3qCWuuNj4faKMKahn_IJGeajWt_DqJkA/exec";
+ <script>
+  const apiUrl = "https://script.google.com/macros/s/AKfycbzb0B7SaRSAJiKzUoU6hI7RMB4LzO6Uoua1fn3qCWuuNj4faKMKahn_IJGeajWt_DqJkA/exec";
 
-    function fetchResult() {
-      const symbol = document.getElementById("symbolInput").value.trim();
-      if (!symbol) {
-        alert("Please enter a symbol number.");
-        return;
-      }
-
-      fetch(`${apiUrl}?symbol=${symbol}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.error || !data.Name) {
-            document.getElementById("result").innerHTML = `<p style="color:red;">Result not found!</p>`;
-            return;
-          }
-
-          let html = `
-            <h2>Student Information</h2>
-            <p><strong>Name:</strong> ${data.Name}</p>
-            <p><strong>Gender:</strong> ${data.Gender}</p>
-            <p><strong>DOB:</strong> ${data.DOB}</p>
-            <p><strong>Symbol No:</strong> ${data.Roll}</p>
-            <p><strong>GPA:</strong> ${data.GPA}</p>
-            <p><strong>Grade:</strong> ${data.Grade}</p>
-            <p><strong>Result:</strong> ${data.Result}</p>
-            
-            <h3>Subject Grades</h3>
-            <table>
-              <tr>
-                <th>Subject</th>
-                <th>Grade</th>
-                <th>Grade Point</th>
-              </tr>`;
-
-          data.Subjects.forEach(sub => {
-            html += `
-              <tr>
-                <td>${sub.name}</td>
-                <td>${sub.grade}</td>
-                <td>${sub.gp}</td>
-              </tr>`;
-          });
-
-          html += `</table>`;
-          document.getElementById("result").innerHTML = html;
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("result").innerHTML = `<p style="color:red;">Error fetching result. Try again later.</p>`;
-        });
+  function fetchResult() {
+    const symbol = document.getElementById("symbolInput").value.trim();
+    if (!symbol) {
+      alert("Please enter a symbol number.");
+      return;
     }
-  </script>
+
+    fetch(`${apiUrl}?symbol=${symbol}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error || !data.Name) {
+          document.getElementById("result").innerHTML = `<p style="color:red;">Result not found!</p>`;
+          return;
+        }
+
+        let html = `
+          <h2>Student Information</h2>
+          <p><strong>Name:</strong> ${data.Name}</p>
+          <p><strong>Gender:</strong> ${data.Gender}</p>
+          <p><strong>DOB:</strong> ${data.DOB}</p>
+          <p><strong>Symbol No:</strong> ${data.Roll}</p>
+
+          <h3>Subject-wise Grades</h3>
+          <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+              <th>Code</th>
+              <th>Subject</th>
+              <th>Grade</th>
+              <th>Grade Point</th>
+              <th>Final Grade</th>
+            </tr>`;
+
+        data.Subjects.forEach((subject, index) => {
+          html += `
+            <tr>
+              <td>${subject.code || index + 1}</td>
+              <td>${subject.name}</td>
+              <td>${subject.grade}</td>
+              <td>${subject.gp}</td>
+              <td>${subject.finalGrade || ""}</td>
+            </tr>`;
+        });
+
+        html += `
+          <tr style="font-weight:bold; background:#f0f0f0;">
+            <td colspan="3">GPA</td>
+            <td colspan="2">${data.GPA} (${data.Grade})</td>
+          </tr>
+        </table>
+
+        <p><strong>Result:</strong> ${data.Result}</p>
+        `;
+
+        document.getElementById("result").innerHTML = html;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("result").innerHTML = `<p style="color:red;">Error fetching result. Try again later.</p>`;
+      });
+  }
+</script>
 </body>
 </html>
