@@ -1,84 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Guru Jajur Secondary School Result</title>
+  <meta charset="UTF-8" />
+  <title>Student Result - Guru Jajur Secondary School</title>
   <style>
-    body { font-family: Arial; padding: 30px; background: #f2f2f2; }
-    .card {
-      background: white; padding: 20px; border-radius: 10px;
-      max-width: 800px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+      background: #f2f2f2;
     }
-    h2, h3 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .info { margin-top: 20px; }
-    .info span { display: block; margin-bottom: 5px; }
+    h1 {
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #888;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px #ccc;
+    }
   </style>
 </head>
 <body>
-<div class="card">
-  <h2>Guru Jajur Secondary School</h2>
-  <h3>Grade XI - Annual Examination Result 2082</h3>
-
-  <div class="input">
-    <label>Enter Roll Number:</label>
-    <input type="text" id="rollInput" />
+  <div class="card">
+    <h1>Guru Jajur Secondary School</h1>
+    <h3>Grade XI Result Portal</h3>
+    <input type="text" id="symbolInput" placeholder="Enter Symbol Number" />
     <button onclick="fetchResult()">Get Result</button>
+
+    <div id="result"></div>
   </div>
 
-  <div id="result" style="display:none;">
-    <div class="info">
-      <span><strong>Name:</strong> <span id="name"></span></span>
-      <span><strong>Gender:</strong> <span id="gender"></span></span>
-      <span><strong>DOB:</strong> <span id="dob"></span></span>
-      <span><strong>Roll No:</strong> <span id="roll"></span></span>
-    </div>
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbzb0B7SaRSAJiKzUoU6hI7RMB4LzO6Uoua1fn3qCWuuNj4faKMKahn_IJGeajWt_DqJkA/exec";
 
-    <table>
-      <thead>
-        <tr><th>Subject</th><th>Grade</th><th>Grade Point</th></tr>
-      </thead>
-      <tbody id="subjects"></tbody>
-    </table>
+    function fetchResult() {
+      const symbol = document.getElementById("symbolInput").value.trim();
+      if (!symbol) {
+        alert("Please enter a symbol number.");
+        return;
+      }
 
-    <div class="info">
-      <span><strong>Final Grade:</strong> <span id="grade"></span></span>
-      <span><strong>GPA:</strong> <span id="gpa"></span></span>
-      <span><strong>Result:</strong> <span id="status"></span></span>
-    </div>
-  </div>
-</div>
+      fetch(`${apiUrl}?symbol=${symbol}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error || !data.Name) {
+            document.getElementById("result").innerHTML = `<p style="color:red;">Result not found!</p>`;
+            return;
+          }
 
-<script>
-  const apiUrl = "https://script.google.com/macros/s/AKfycbzb0B7SaRSAJiKzUoU6hI7RMB4LzO6Uoua1fn3qCWuuNj4faKMKahn_IJGeajWt_DqJkA/exec";
+          let html = `
+            <h2>Student Information</h2>
+            <p><strong>Name:</strong> ${data.Name}</p>
+            <p><strong>Gender:</strong> ${data.Gender}</p>
+            <p><strong>DOB:</strong> ${data.DOB}</p>
+            <p><strong>Symbol No:</strong> ${data.Roll}</p>
+            <p><strong>GPA:</strong> ${data.GPA}</p>
+            <p><strong>Grade:</strong> ${data.Grade}</p>
+            <p><strong>Result:</strong> ${data.Result}</p>
+            
+            <h3>Subject Grades</h3>
+            <table>
+              <tr>
+                <th>Subject</th>
+                <th>Grade</th>
+                <th>Grade Point</th>
+              </tr>`;
 
-  function fetchResult() {
-    const roll = document.getElementById("rollInput").value;
-    fetch(`${apiUrl}?symbol=${roll}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.Name) return alert("Result not found!");
+          data.Subjects.forEach(sub => {
+            html += `
+              <tr>
+                <td>${sub.name}</td>
+                <td>${sub.grade}</td>
+                <td>${sub.gp}</td>
+              </tr>`;
+          });
 
-        document.getElementById("result").style.display = "block";
-        document.getElementById("name").innerText = data.Name;
-        document.getElementById("gender").innerText = data.Gender;
-        document.getElementById("dob").innerText = data.DOB;
-        document.getElementById("roll").innerText = data.Roll;
-        document.getElementById("grade").innerText = data.Grade;
-        document.getElementById("gpa").innerText = data.GPA;
-        document.getElementById("status").innerText = data.Result;
-
-        let tbody = document.getElementById("subjects");
-        tbody.innerHTML = "";
-        data.Subjects.forEach(sub => {
-          tbody.innerHTML += `<tr><td>${sub.name}</td><td>${sub.grade}</td><td>${sub.gp}</td></tr>`;
+          html += `</table>`;
+          document.getElementById("result").innerHTML = html;
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("result").innerHTML = `<p style="color:red;">Error fetching result. Try again later.</p>`;
         });
-      })
-      .catch(err => {
-        alert("Error fetching result.");
-        console.error(err);
-      });
-  }
-</script>
+    }
+  </script>
 </body>
 </html>
