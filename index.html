@@ -1,116 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Student Result - Guru Jajur Secondary School</title>
+  <title>Online Result</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: auto;
-      padding: 2rem;
-      background: #f2f2f2;
-    }
-    h1 {
-      text-align: center;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      width: 100%;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid #888;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    .card {
-      background: white;
-      padding: 20px;
-      box-shadow: 0 0 10px #ccc;
-    }
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .summary { margin-top: 10px; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Guru Jajur Secondary School</h1>
-    <h3>Grade XI Result Portal</h3>
-    <input type="text" id="symbolInput" placeholder="Enter Symbol Number" />
-    <button onclick="fetchResult()">Get Result</button>
+  <h2>Result Checker</h2>
+  <input type="text" id="symbolInput" placeholder="Enter Symbol Number">
+  <button onclick="fetchResult()">Get Result</button>
 
-    <div id="result"></div>
-  </div>
+  <div id="result"></div>
 
- <script>
-  const apiUrl = "https://script.google.com/macros/s/AKfycbzb0B7SaRSAJiKzUoU6hI7RMB4LzO6Uoua1fn3qCWuuNj4faKMKahn_IJGeajWt_DqJkA/exec";
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbxL3iQygmDHD9ST8JBfnO8qKrcp15w-ER4pWR1luLmu3TVE-uhALO0lXVLhyGu7daJYjg/exec";
+    function fetchResult() {
+      const symbol = document.getElementById("symbolInput").value.trim();
+      if (!symbol) {
+        alert("Please enter symbol number.");
+        return;
+      }
 
-  function fetchResult() {
-    const symbol = document.getElementById("symbolInput").value.trim();
-    if (!symbol) {
-      alert("Please enter a symbol number.");
-      return;
-    }
+      fetch(`${apiUrl}?symbol=${symbol}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !data.Name) {
+            document.getElementById("result").innerHTML = "<p style='color:red;'>Result not found!</p>";
+            return;
+          }
 
-    fetch(`${apiUrl}?symbol=${symbol}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error || !data.Name) {
-          document.getElementById("result").innerHTML = `<p style="color:red;">Result not found!</p>`;
-          return;
-        }
+          let html = `
+            <h3>Student Information</h3>
+            <p><strong>Registration:</strong> ${data.Registration}</p>
+            <p><strong>Name:</strong> ${data.Name}</p>
+            <p><strong>Gender:</strong> ${data.Gender}</p>
+            <p><strong>DOB:</strong> ${data.DOB}</p>
+            <p><strong>Symbol No:</strong> ${data.Symbol}</p>
 
-        let html = `
-          <h2>Student Information</h2>
-          <p><strong>Name:</strong> ${data.Name}</p>
-          <p><strong>Gender:</strong> ${data.Gender}</p>
-          <p><strong>DOB:</strong> ${data.DOB}</p>
-          <p><strong>Symbol No:</strong> ${data.Roll}</p>
+            <h3>Gradesheet</h3>
+            <table>
+              <tr>
+                <th>Subject Code</th>
+                <th>Subject</th>
+                <th>Grade</th>
+                <th>Grade Point</th>
+              </tr>`;
 
-          <h3>Subject-wise Grades</h3>
-          <table border="1" cellpadding="5" cellspacing="0">
-            <tr>
-              <th>Code</th>
-              <th>Subject</th>
-              <th>Grade</th>
-              <th>Grade Point</th>
-              <th>Final Grade</th>
-            </tr>`;
+          data.Subjects.forEach(sub => {
+            html += `
+              <tr>
+                <td>${sub.code1}<br>${sub.code2}</td>
+                <td>${sub.name1}<br>${sub.name2}</td>
+                <td>${sub.grade1}<br>${sub.grade2}</td>
+                <td>${sub.gp1}<br>${sub.gp2}</td>
+              </tr>`;
+          });
 
-        data.Subjects.forEach((subject, index) => {
-          html += `
-            <tr>
-              <td>${subject.code || index + 1}</td>
-              <td>${subject.name}</td>
-              <td>${subject.grade}</td>
-              <td>${subject.gp}</td>
-              <td>${subject.finalGrade || ""}</td>
-            </tr>`;
+          html += `</table>
+            <p class="summary">GPA: ${data.GPA}</p>
+            <p class="summary">Result: ${data.Result}</p>`;
+
+          document.getElementById("result").innerHTML = html;
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("result").innerHTML = "<p style='color:red;'>Error fetching result.</p>";
         });
-
-        html += `
-          <tr style="font-weight:bold; background:#f0f0f0;">
-            <td colspan="3">GPA</td>
-            <td colspan="2">${data.GPA} (${data.Grade})</td>
-          </tr>
-        </table>
-
-        <p><strong>Result:</strong> ${data.Result}</p>
-        `;
-
-        document.getElementById("result").innerHTML = html;
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("result").innerHTML = `<p style="color:red;">Error fetching result. Try again later.</p>`;
-      });
-  }
-</script>
+    }
+  </script>
 </body>
 </html>
