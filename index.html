@@ -1,76 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Online Result</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
-    th { background-color: #f0f0f0; }
-    .summary { margin-top: 10px; font-weight: bold; }
+    body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    #result { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Result Checker</h2>
+  <h2>Check Your Result</h2>
   <input type="text" id="symbolInput" placeholder="Enter Symbol Number">
   <button onclick="fetchResult()">Get Result</button>
-
   <div id="result"></div>
 
   <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbzMzVQR7eFrWNB-LRxG7O6Br9Npxh450hrOwt8eJcEMSMgrI7kycmdd1r12zARSXAxBaw/exec";
-    function fetchResult() {
-      const symbol = document.getElementById("symbolInput").value.trim();
-      if (!symbol) {
-        alert("Please enter symbol number.");
-        return;
+    const apiUrl = "https://script.google.com/macros/s/AKfycbxRYHGyw4xn4CiYHhn8UpsrCdwXBAQbh2ByodLEzkzh2rsgsbh-gDvyNyC1K43cx4mV/exec";
+
+    async function fetchResult() {
+      const symbol = document.getElementById("symbolInput").value;
+      if (!symbol) return alert("Please enter a symbol number.");
+      const resDiv = document.getElementById("result");
+      resDiv.innerHTML = "Loading...";
+
+      try {
+        const response = await fetch(`${apiUrl}?symbol=${symbol}`);
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        let html = `
+          <p><strong>Registration Number:</strong> ${data.Registration}</p>
+          <p><strong>Name of Student:</strong> ${data.Name}</p>
+          <p><strong>Gender:</strong> ${data.Gender}</p>
+          <p><strong>Date of Birth:</strong> ${data.DOB}</p>
+          <p><strong>Symbol Number:</strong> ${data.Symbol}</p>
+          <table>
+            <tr><th>Subject Code</th><th>Subject</th><th>Grade</th><th>Grade Point</th></tr>`;
+
+        for (const subj of data.Subjects) {
+          html += `<tr><td>${subj.code}</td><td>${subj.name}</td><td>${subj.grade}</td><td>${subj.gp}</td></tr>`;
+        }
+
+        html += `</table>
+          <p><strong>GPA:</strong> ${data.GPA}</p>
+          <p><strong>Result:</strong> ${data.Result}</p>`;
+
+        resDiv.innerHTML = html;
+      } catch (err) {
+        resDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
       }
-
-      fetch(`${apiUrl}?symbol=${symbol}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data || !data.Name) {
-            document.getElementById("result").innerHTML = "<p style='color:red;'>Result not found!</p>";
-            return;
-          }
-
-          let html = `
-            <h3>Student Information</h3>
-            <p><strong>Registration:</strong> ${data.Registration}</p>
-            <p><strong>Name:</strong> ${data.Name}</p>
-            <p><strong>Gender:</strong> ${data.Gender}</p>
-            <p><strong>DOB:</strong> ${data.DOB}</p>
-            <p><strong>Symbol No:</strong> ${data.Symbol}</p>
-
-            <h3>Gradesheet</h3>
-            <table>
-              <tr>
-                <th>Subject Code</th>
-                <th>Subject</th>
-                <th>Grade</th>
-                <th>Grade Point</th>
-              </tr>`;
-
-          data.Subjects.forEach(sub => {
-            html += `
-              <tr>
-                <td>${sub.code1}<br>${sub.code2}</td>
-                <td>${sub.name1}<br>${sub.name2}</td>
-                <td>${sub.grade1}<br>${sub.grade2}</td>
-                <td>${sub.gp1}<br>${sub.gp2}</td>
-              </tr>`;
-          });
-
-          html += `</table>
-            <p class="summary">GPA: ${data.GPA}</p>
-            <p class="summary">Result: ${data.Result}</p>`;
-
-          document.getElementById("result").innerHTML = html;
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("result").innerHTML = "<p style='color:red;'>Error fetching result.</p>";
-        });
     }
   </script>
 </body>
